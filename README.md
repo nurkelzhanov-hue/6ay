@@ -3,48 +3,47 @@
 <head>
   <meta charset="UTF-8">
   <title>6 Oylik Trading Plan & Tracker</title>
+  <!-- Grafik chizish uchun Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-    .container { max-width: 1300px; margin: auto; background: #1e293b; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
-    h1 { color: #38bdf8; text-align: center; margin-bottom: 5px; font-size: 28px; }
-    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 30px; font-size: 14px; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 1300px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h1 { color: #1e3c72; text-align: center; margin-bottom: 5px; font-size: 26px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
     
     /* Grafik qismi */
-    .chart-container { width: 100%; height: 350px; margin-bottom: 40px; background: #0f172a; padding: 15px; border-radius: 8px; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5); }
+    .chart-container { width: 100%; height: 320px; margin-bottom: 40px; }
     
-    /* Jadval dizayni */
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; overflow: hidden; border-radius: 8px; }
-    th, td { border: 1px solid #334155; padding: 12px; text-align: center; }
-    th { background: #0284c7; color: white; font-weight: 600; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* Jadval dizayni (Och rangli interfeys) */
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    th, td { border: 1px solid #e0e0e0; padding: 12px; text-align: center; }
+    th { background: #1e3c72; color: white; font-weight: 600; font-size: 14px; }
+    tr:nth-child(even) { background: #f9fbfd; }
     
-    /* Rangli holatlar va qatorlar */
-    .row-success { background-color: rgba(34, 197, 94, 0.15) !important; }
-    .row-danger { background-color: rgba(239, 68, 68, 0.15) !important; }
-    .row-normal { background-color: #1e293b; }
-    tr:nth-child(even).row-normal { background-color: #1e293b; opacity: 0.9; }
+    /* Foiz kiritish maydoni (Input) */
+    input[type="number"] { width: 70px; padding: 6px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
     
-    /* Tugmalar va interfeys elementlari */
-    select { background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; outline: none; }
-    select:focus { border-color: #38bdf8; }
+    /* Dinamik Rangli Status Tugmalari */
+    .status-badge { padding: 6px 15px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .status-success { background-color: #28a745; color: white; }
+    .status-warning { background-color: #ffc107; color: #212529; }
+    .status-danger { background-color: #dc3545; color: white; }
+
+    /* Qator ranglari */
+    .profit-row { background-color: #e6f4ea !important; }
+    .warning-row { background-color: #fffde7 !important; }
+    .loss-row { background-color: #fce8e6 !important; }
     
-    .status-badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
-    .badge-pending { background: #475569; color: #cbd5e1; }
-    .badge-success { background: #22c55e; color: white; }
-    .badge-danger { background: #ef4444; color: white; }
-    
-    input[type="number"] { background: #0f172a; color: #f8fafc; border: 1px solid #475569; padding: 5px; width: 70px; text-align: center; border-radius: 4px; font-weight: bold; }
-    
-    .text-highlight { color: #38bdf8; font-weight: bold; }
-    .text-profit { color: #4ade80; font-weight: bold; }
-    .text-loss { color: #f87171; font-weight: bold; }
+    .text-highlight { color: #0284c7; font-weight: bold; }
+    .text-profit { color: #137333; font-weight: bold; }
+    .text-loss { color: #c5221f; font-weight: bold; }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>📈 6 OY DAWAMINDA: Trading Plan & Level Tracker</h1>
-  <div class="subtitle">Boshlang'ich balans: $100 | Har bir darajada xavf (Risk): 5% | Maqsadlar Excel formulasiga asosan dinamik hisoblanadi</div>
+  <h1>🚀 6 OY DAWAMINDA: Trading Plan & Level Tracker</h1>
+  <div class="subtitle">Boshlang'ich balans: $100 | Har bir darajada xavf (Risk): 5% | Kunlik foyda foizini qo'lda o'zgartirishingiz mumkin</div>
   
   <div class="chart-container">
     <canvas id="planChart"></canvas>
@@ -53,82 +52,46 @@
   <table id="planTable">
     <thead>
       <tr>
-        <th>Level</th>
+        <th>Kun / Level</th>
         <th>Boshlang'ich Balans ($)</th>
-        <th>Risk (%)</th>
-        <th>Risk ($)</th>
+        <th>Xavf (%)</th>
+        <th>Xavf ($)</th>
         <th>Foyda Maqsadi ($)</th>
-        <th>Pips Target</th>
+        <th>Pips Maqsadi</th>
         <th>Tavsiya Lot</th>
-        <th>Amaldagi Natija (%)</th>
+        <th>Kunlik Foyda / Zarar (%)</th>
         <th>Yopilish Balansi ($)</th>
-        <th>Daraja Statusi</th>
+        <th>Kunlik Status (Holat)</th>
       </tr>
     </thead>
     <tbody id="tableBody">
-      <!-- JavaScript qatorlarni avtomatik to'ldiradi -->
+      <!-- JavaScript qatorlarni avtomatik yaratadi -->
     </tbody>
   </table>
 </div>
 
 <script>
-  const totalLevels = 40; // Rejadagi jami darajalar soni
-  let currentStatus = new Array(totalLevels).fill('pending'); // pending, success, loss
-  let userAdjustments = new Array(totalLevels).fill(0); // Qo'lda kiritilgan maxsus foizlar (agar standartdan farq qilsa)
+  const totalLevels = 40; // Rejadagi jami kunlar/bosqichlar soni
   let initialBalance = 100.00;
+  
+  // Standart boshlang'ich qiymat: har kuni +8% maqsad (Excel formulasiga ko'ra)
+  let profits = new Array(totalLevels).fill(8); 
+  let balances = new Array(totalLevels).fill(0);
+  balances[0] = initialBalance;
 
-  let computedBalances = [];
-
-  function calculatePlan() {
-    computedBalances = [];
-    let activeBalance = initialBalance;
-
+  function calculateData() {
     for (let i = 0; i < totalLevels; i++) {
-      let levelStart = activeBalance;
-      let riskPercent = 5; // Standart 5% risk
-      let riskAmount = levelStart * (riskPercent / 100);
+      let startBal = balances[i];
+      let pPercent = profits[i];
       
-      // Standart maqsad: darajaga nisbatan o'sish sur'ati
-      // Excelingizdagi 1-qator qoidasi (100$ -> 8$ profit -> 108$ goal)
-      let standardProfitGoal = i === 0 ? 8.00 : levelStart * 0.08; 
-      if (i === 2) standardProfitGoal = levelStart * 0.10; // Excel maxsus moslashuvi
-      
-      let pips = standardProfitGoal / 2;
-      let lot = (riskAmount / pips) / 10;
-      if(lot < 0.01) lot = 0.01;
+      // Foiz hisob-kitoblari
+      let endBal = startBal + (startBal * (pPercent / 100));
+      if (endBal < 0) endBal = 0;
 
-      // Amaldagi natijani hisoblash
-      let finalResultPercent = 0;
-      if (currentStatus[i] === 'success') {
-        // Agar muvaffaqiyatli bo'lsa, Excel bo'yicha balans o'sadi
-        finalResultPercent = (standardProfitGoal / levelStart) * 100;
-      } else if (currentStatus[i] === 'loss') {
-        // Agar daraja zarar bilan yopilsa, foydalanuvchi kiritgan minus foiz yoki standart -5% risk olinadi
-        finalResultPercent = userAdjustments[i] < 0 ? userAdjustments[i] : -riskPercent;
-      } else {
-        // Kutilmoqda rejimi - kelajak reja sifatida standart o'sishni ko'rsatib turadi
-        finalResultPercent = (standardProfitGoal / levelStart) * 100;
+      if (i < totalLevels - 1) {
+        balances[i+1] = endBal;
       }
-
-      let levelEnd = levelStart + (levelStart * (finalResultPercent / 100));
-      if (levelEnd < 0) levelEnd = 0;
-
-      computedBalances.push({
-        level: i + 1,
-        start: levelStart,
-        riskP: riskPercent,
-        riskA: riskAmount,
-        goal: standardProfitGoal,
-        pips: pips,
-        lot: lot,
-        actualP: currentStatus[i] === 'pending' ? 0 : finalResultPercent,
-        end: levelEnd
-      });
-
-      // Zanjir davom etadi: keyingi daraja shu kunning yopilishidan boshlanadi
-      activeBalance = levelEnd;
     }
-
     renderTable();
     updateChart();
   }
@@ -136,106 +99,93 @@
   function renderTable() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
-
+    
     for (let i = 0; i < totalLevels; i++) {
-      let d = computedBalances[i];
-      let row = document.createElement('tr');
+      let startBal = balances[i];
+      let pPercent = profits[i];
       
-      // Ranglar va status ko'rinishi
-      let statusSelectHTML = `
-        <select onchange="updateStatus(${i}, this.value)">
-          <option value="pending" ${currentStatus[i] === 'pending' ? 'selected' : ''}>Kutilmoqda ⏳</option>
-          <option value="success" ${currentStatus[i] === 'success' ? 'selected' : ''}>Bajarildi ✅</option>
-          <option value="loss" ${currentStatus[i] === 'loss' ? 'selected' : ''}>Zarar (Minus) ❌</option>
-        </select>
-      `;
+      // Excel formulalariga asoslangan ustunlar:
+      let riskPercent = 5; 
+      let riskAmount = startBal * (riskPercent / 100);
+      let standardGoal = startBal * 0.08; 
+      let pips = standardGoal / 2;
+      let lot = startBal / 10000; // Excel: STARTING BALANCE / 10000
 
-      if (currentStatus[i] === 'success') {
-        row.className = 'row-success';
-      } else if (currentStatus[i] === 'loss') {
-        row.className = 'row-danger';
+      let endBal = startBal + (startBal * (pPercent / 100));
+      if (endBal < 0) endBal = 0;
+      
+      let row = document.createElement('tr');
+      let statusHTML = '';
+      
+      // Foiz ko'rsatkichiga qarab dinamik status va qator ranglari
+      if (pPercent >= 8) {
+        row.className = 'profit-row';
+        statusHTML = '<span class="status-badge status-success">Maqsad Bajarildi ✅</span>';
+      } else if (pPercent > 0 && pPercent < 8) {
+        row.className = 'warning-row';
+        statusHTML = '<span class="status-badge status-warning">Kam Foyda ⚠️</span>';
+      } else if (pPercent === 0) {
+        statusHTML = '<span class="status-badge" style="background:#e0e0e0; color:#555;">Savdo Bo\'lmadi</span>';
       } else {
-        row.className = 'row-normal';
-      }
-
-      // Agar zarar bo'lsa, qo'lda minus foiz kiritish maydoni ochiladi
-      let actualResultHTML = '';
-      if (currentStatus[i] === 'loss') {
-        let val = userAdjustments[i] !== 0 ? userAdjustments[i] : -5;
-        actualResultHTML = `<input type="number" step="0.1" value="${val}" onchange="updateCustomPercent(${i}, this.value)">%`;
-      } else if (currentStatus[i] === 'success') {
-        actualResultHTML = `<span class="text-profit">+${d.actualP.toFixed(2)}%</span>`;
-      } else {
-        actualResultHTML = `<span style="color:#64748b;">0.00%</span>`;
+        row.className = 'loss-row';
+        statusHTML = '<span class="status-badge status-danger">Zarar Ko\'rildi ❌</span>';
       }
 
       row.innerHTML = `
-        <td><b>${d.level}</b></td>
-        <td>$${d.start.toFixed(2)}</td>
-        <td>${d.riskP}%</td>
-        <td>$${d.riskA.toFixed(2)}</td>
-        <td class="text-highlight">$${d.goal.toFixed(2)}</td>
-        <td>${d.pips.toFixed(2)}</td>
-        <td style="color:#f59e0b; font-weight:bold;">${d.lot.toFixed(4)}</td>
-        <td>${actualResultHTML}</td>
-        <td><b>$${d.end.toFixed(2)}</b></td>
-        <td>${statusSelectHTML}</td>
+        <td><b>${i+1}</b></td>
+        <td>$${startBal.toFixed(2)}</td>
+        <td>${riskPercent}%</td>
+        <td>$${riskAmount.toFixed(2)}</td>
+        <td class="text-highlight">$${standardGoal.toFixed(2)}</td>
+        <td>${pips.toFixed(2)}</td>
+        <td style="color:#e67e22; font-weight:bold;">${lot.toFixed(4)}</td>
+        <td><input type="number" step="0.1" value="${pPercent}" onchange="updateProfit(${i}, this.value)">%</td>
+        <td><b>$${endBal.toFixed(2)}</b></td>
+        <td>${statusHTML}</td>
       `;
       tbody.appendChild(row);
     }
   }
 
-  function updateStatus(index, value) {
-    currentStatus[index] = value;
-    if (value !== 'loss') userAdjustments[index] = 0; // Reset custom percent if not loss
-    calculatePlan();
+  function updateProfit(index, value) {
+    profits[index] = parseFloat(value) || 0;
+    calculateData();
   }
 
-  function updateCustomPercent(index, value) {
-    let val = parseFloat(value) || 0;
-    // Agarda foydalanuvchi minus belgisini qo'ymasa, avtomatik minus qilamiz
-    if (val > 0) val = -val;
-    userAdjustments[index] = val;
-    calculatePlan();
-  }
-
-  // Chart.js Grafik sozlamalari (To'q qora trading uslubida)
+  // Och rangli chiroyli grafik sozlamalari
   const ctx = document.getElementById('planChart').getContext('2d');
   let planChart = new Chart(ctx, {
     type: 'line',
     data: {
-      labels: Array.from({length: totalLevels}, (_, i) => `Lvl ${i+1}`),
+      labels: Array.from({length: totalLevels}, (_, i) => `${i+1}-kun`),
       datasets: [{
-        label: 'Balans O\'sish Trayektoriyasi ($)',
+        label: 'Balans ($)',
         data: [],
-        borderColor: '#38bdf8',
-        backgroundColor: 'rgba(56, 189, 248, 0.08)',
+        borderColor: '#1e3c72',
+        backgroundColor: 'rgba(30, 60, 114, 0.05)',
         borderWidth: 2.5,
         fill: true,
-        tension: 0.2,
-        pointBackgroundColor: '#38bdf8'
+        tension: 0.2
       }]
     },
-    options: {
-      responsive: true,
+    options: { 
+      responsive: true, 
       maintainAspectRatio: false,
-      plugins: {
-        legend: { labels: { color: '#f8fafc' } }
-      },
-      scales: {
-        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' }, beginAtZero: false }
-      }
+      scales: { y: { beginAtZero: false } }
     }
   });
 
   function updateChart() {
-    planChart.data.datasets[0].data = computedBalances.map(d => d.end);
+    let closingBalances = [];
+    for(let i=0; i<totalLevels; i++) {
+      let cBal = balances[i] + (balances[i] * (profits[i]/100));
+      closingBalances.push(cBal < 0 ? 0 : cBal);
+    }
+    planChart.data.datasets[0].data = closingBalances;
     planChart.update();
   }
 
-  // Ilk hisob-kitobni ishga tushirish
-  calculatePlan();
+  calculateData();
 </script>
 </body>
 </html>
