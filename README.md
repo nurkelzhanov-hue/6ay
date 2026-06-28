@@ -36,7 +36,7 @@
 
 <div class="container">
   <h1>🚀 6 OY DAWAMINDA: To'liq 150 Kunlik Trading Plan & Tracker</h1>
-  <div class="subtitle">Boshlang'ich balans: $100 | Jami: 150 Savdo Kuni | Har bir kunning foyda foizini qo'lda o'zgartirib hisoblashingiz mumkin</div>
+  <div class="subtitle">Boshlang'ich balans: $100 | Jami: 150 Savdo Kuni | Excel ma'lumotlari bo'yicha to'liq ishlaydi</div>
   
   <div class="chart-container">
     <canvas id="planChart"></canvas>
@@ -63,20 +63,30 @@
 </div>
 
 <script>
-  // Excelingizdagi real 150 ta qator (6 oylik savdo kunlari)
-  const totalLevels = 150; 
+  const totalLevels = 150;
   let initialBalance = 100.00;
   
-  // Standart holatda har kuni maqsad +8% o'sish
+  // Standart foyda foizlari (+8% yoki Excelga mos ravishda)
   let profits = new Array(totalLevels).fill(8); 
   let balances = new Array(totalLevels).fill(0);
   balances[0] = initialBalance;
+
+  // Dinamik risk foizlarini aniqlash (Exceldagi kabi qadamlar)
+  function getRiskPercent(dayIndex) {
+    let day = dayIndex + 1;
+    if (day <= 15) return 5;
+    if (day <= 34) return 4;
+    if (day <= 64) return 3;
+    if (day <= 104) return 2;
+    return 1; // 105 dan 150-kungacha 1% risk
+  }
 
   function calculateData() {
     for (let i = 0; i < totalLevels; i++) {
       let startBal = balances[i];
       let pPercent = profits[i];
       
+      // Excelingiz bo'yicha kunlik maqsad foizi % (ba'zi darajalarda o'zgaradi, masalan 1-kun 8%, keyingilarida o'sishga mos)
       let endBal = startBal + (startBal * (pPercent / 100));
       if (endBal < 0) endBal = 0;
 
@@ -96,9 +106,10 @@
       let startBal = balances[i];
       let pPercent = profits[i];
       
-      // Excel formulalari asosida aniq hisoblash:
-      let riskPercent = 5; 
+      let riskPercent = getRiskPercent(i);
       let riskAmount = startBal * (riskPercent / 100);
+      
+      // Excel aniq formati: Foyda maqsadi asosan balansning 8% yoki unga yaqin o'sish foizida
       let standardGoal = startBal * 0.08; 
       let pips = standardGoal / 2;
       let lot = startBal / 10000; 
@@ -109,10 +120,10 @@
       let row = document.createElement('tr');
       let statusHTML = '';
       
-      if (pPercent >= 8) {
+      if (pPercent >= 6) {
         row.className = 'profit-row';
         statusHTML = '<span class="status-badge status-success">Maqsad Bajarildi ✅</span>';
-      } else if (pPercent > 0 && pPercent < 8) {
+      } else if (pPercent > 0 && pPercent < 6) {
         row.className = 'warning-row';
         statusHTML = '<span class="status-badge status-warning">Kam Foyda ⚠️</span>';
       } else if (pPercent === 0) {
@@ -156,7 +167,7 @@
         borderWidth: 2,
         fill: true,
         tension: 0.1,
-        pointRadius: 1 // 150 ta nuqta grafikda siqilib ketmasligi uchun nuqtalar kichraytirildi
+        pointRadius: 1
       }]
     },
     options: { 
