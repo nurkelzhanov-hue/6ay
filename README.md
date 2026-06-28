@@ -6,14 +6,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; color: #333; }
-    .container { max-width: 1350px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .container { max-width: 1200px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     h1 { color: #1e3c72; text-align: center; margin-bottom: 5px; font-size: 26px; }
     .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
     
     .chart-container { width: 100%; height: 340px; margin-bottom: 40px; }
     
     table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    th, td { border: 1px solid #e0e0e0; padding: 10px 8px; text-align: center; font-size: 14px; }
+    th, td { border: 1px solid #e0e0e0; padding: 11px 10px; text-align: center; font-size: 14px; }
     th { background: #1e3c72; color: white; font-weight: 600; position: sticky; top: 0; z-index: 10; }
     tr:nth-child(even) { background: #f9fbfd; }
     
@@ -47,11 +47,8 @@
       <tr>
         <th>Kun / Level</th>
         <th>Boshlang'ich Balans ($)</th>
-        <th>Xavf (%)</th>
         <th>Xavf ($)</th>
         <th>Foyda Maqsadi ($)</th>
-        <th>Pips Maqsadi</th>
-        <th>Tavsiya Lot</th>
         <th>Kunlik Foyda / Zarar (%)</th>
         <th>Yopilish Balansi ($)</th>
         <th>Kunlik Status (Holat)</th>
@@ -66,24 +63,23 @@
   const totalLevels = 150;
   let initialBalance = 100.00;
   
-  // Excel bo'yicha har bir guruhning aniq strategik maqsad foizlari
+  // Excel bo'yicha maqsad foizlari
   function getExcelTargetPercent(day) {
-    if (day === 1 || day === 2) return 8.0;   // Lvl 1-2: 8%
-    if (day >= 3 && day <= 25) return 10.0;   // Lvl 3-25: 10%
-    if (day >= 26 && day <= 64) return 6.0;   // Lvl 26-64: 6%
-    if (day >= 65 && day <= 81) return 4.0;   // Lvl 65-81: 4%
-    return 2.0;                               // Lvl 82-150: 2%
+    if (day === 1 || day === 2) return 8.0;
+    if (day >= 3 && day <= 25) return 10.0;
+    if (day >= 26 && day <= 64) return 6.0;
+    if (day >= 65 && day <= 81) return 4.0;
+    return 2.0;
   }
 
-  // Excel bo'yicha risk foizlarining kamayish bosqichlari
+  // Excel bo'yicha risk foizlari
   function getExcelRiskPercent(day) {
-    if (day <= 25) return 5.0;                // Lvl 1-25: 5% Risk
-    if (day >= 26 && day <= 64) return 3.0;   // Lvl 26-64: 3% Risk
-    if (day >= 65 && day <= 81) return 2.0;   // Lvl 65-81: 2% Risk
-    return 1.0;                               // Lvl 82-150: 1% Risk
+    if (day <= 25) return 5.0;
+    if (day >= 26 && day <= 64) return 3.0;
+    if (day >= 65 && day <= 81) return 2.0;
+    return 1.0;
   }
 
-  // Massivlarni standart Excel bo'yicha to'ldiramiz
   let profits = [];
   for (let d = 1; d <= totalLevels; d++) {
     profits.push(getExcelTargetPercent(d));
@@ -117,14 +113,11 @@
       let startBal = balances[i];
       let pPercent = profits[i];
       
-      // Excel qoidalari asosida ustunlarni aniq hisoblash
       let riskPercent = getExcelRiskPercent(currentDay);
       let riskAmount = startBal * (riskPercent / 100);
       let targetPercent = getExcelTargetPercent(currentDay);
       
       let standardGoal = startBal * (targetPercent / 100); 
-      let pips = standardGoal / 2;
-      let lot = startBal / 10000; 
 
       let endBal = startBal + (startBal * (pPercent / 100));
       if (endBal < 0) endBal = 0;
@@ -132,7 +125,6 @@
       let row = document.createElement('tr');
       let statusHTML = '';
       
-      // Statusni aniqlash sharti
       if (pPercent >= targetPercent) {
         row.className = 'profit-row';
         statusHTML = '<span class="status-badge status-success">Maqsad Bajarildi ✅</span>';
@@ -149,11 +141,8 @@
       row.innerHTML = `
         <td><b>${currentDay}</b></td>
         <td>$${startBal.toFixed(2)}</td>
-        <td>${riskPercent}%</td>
         <td>$${riskAmount.toFixed(2)}</td>
         <td class="text-highlight">$${standardGoal.toFixed(2)}</td>
-        <td>${pips.toFixed(2)}</td>
-        <td style="color:#e67e22; font-weight:bold;">${lot.toFixed(4)}</td>
         <td><input type="number" step="0.1" value="${pPercent}" onchange="updateProfit(${i}, this.value)">%</td>
         <td><b>$${endBal.toFixed(2)}</b></td>
         <td>${statusHTML}</td>
