@@ -30,13 +30,18 @@
     
     .text-highlight { color: #0284c7; font-weight: bold; }
     .text-profit { color: #137333; font-weight: bold; }
+    
+    /* Ma'lumotlarni tozalash tugmasi */
+    .reset-btn { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; margin-bottom: 15px; float: right; }
+    .reset-btn:hover { background: #bd2130; }
   </style>
 </head>
 <body>
 
 <div class="container">
+  <button class="reset-btn" onclick="resetAllData()">Rejani Tozalash (Reset) 🔄</button>
   <h1>🚀 6 OY DAWAMINDA: Trading Plan & Level Tracker</h1>
-  <div class="subtitle">Boshlang'ich balans: $100 | Jami: 150 Savdo Kuni | Risk va Maqsadlar 100% Excel andozasida</div>
+  <div class="subtitle">Boshlang'ich balans: $100 | Kiritilgan o'zgarishlar brauzerda avtomatik saqlanib qoladi</div>
   
   <div class="chart-container">
     <canvas id="planChart"></canvas>
@@ -63,7 +68,6 @@
   const totalLevels = 150;
   let initialBalance = 100.00;
   
-  // Excel bo'yicha maqsad foizlari
   function getExcelTargetPercent(day) {
     if (day === 1 || day === 2) return 8.0;
     if (day >= 3 && day <= 25) return 10.0;
@@ -72,7 +76,6 @@
     return 2.0;
   }
 
-  // Excel bo'yicha risk foizlari
   function getExcelRiskPercent(day) {
     if (day <= 25) return 5.0;
     if (day >= 26 && day <= 64) return 3.0;
@@ -80,9 +83,16 @@
     return 1.0;
   }
 
+  // --- BRAUZER XOTIRASIDAN OLISH YOKI YANGI YARATISH ---
   let profits = [];
-  for (let d = 1; d <= totalLevels; d++) {
-    profits.push(getExcelTargetPercent(d));
+  let savedProfits = localStorage.getItem('trading_tracker_profits');
+  
+  if (savedProfits) {
+    profits = JSON.parse(savedProfits);
+  } else {
+    for (let d = 1; d <= totalLevels; d++) {
+      profits.push(getExcelTargetPercent(d));
+    }
   }
   
   let balances = new Array(totalLevels).fill(0);
@@ -100,6 +110,9 @@
         balances[i+1] = endBal;
       }
     }
+    // Xotiraga saqlash
+    localStorage.setItem('trading_tracker_profits', JSON.stringify(profits));
+    
     renderTable();
     updateChart();
   }
@@ -118,7 +131,6 @@
       let targetPercent = getExcelTargetPercent(currentDay);
       
       let standardGoal = startBal * (targetPercent / 100); 
-
       let endBal = startBal + (startBal * (pPercent / 100));
       if (endBal < 0) endBal = 0;
       
@@ -154,6 +166,18 @@
   function updateProfit(index, value) {
     profits[index] = parseFloat(value) || 0;
     calculateData();
+  }
+
+  // Hammasini o'chirib, boshlang'ich holatga qaytarish funksiyasi
+  function resetAllData() {
+    if (confirm("Rostdan ham barcha kiritilgan o'zgarishlarni o'chirib, rejani boshlang'ich holatga keltirmoqchimisiz?")) {
+      localStorage.removeItem('trading_tracker_profits');
+      profits = [];
+      for (let d = 1; d <= totalLevels; d++) {
+        profits.push(getExcelTargetPercent(d));
+      }
+      calculateData();
+    }
   }
 
   const ctx = document.getElementById('planChart').getContext('2d');
