@@ -14,7 +14,7 @@
     
     table { width: 100%; border-collapse: collapse; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     th, td { border: 1px solid #e0e0e0; padding: 10px 8px; text-align: center; font-size: 14px; }
-    th { background: #1e3c72; color: white; font-weight: 600; position: sticky; top: 0; }
+    th { background: #1e3c72; color: white; font-weight: 600; position: sticky; top: 0; z-index: 10; }
     tr:nth-child(even) { background: #f9fbfd; }
     
     input[type="number"] { width: 65px; padding: 5px; text-align: center; border: 1px solid #ccc; border-radius: 4px; font-weight: bold; }
@@ -35,8 +35,8 @@
 <body>
 
 <div class="container">
-  <h1>🚀 6 OY DAWAMINDA: To'liq 150 Kunlik Trading Plan & Tracker</h1>
-  <div class="subtitle">Boshlang'ich balans: $100 | Jami: 150 Savdo Kuni | Excel ma'lumotlari bo'yicha to'liq ishlaydi</div>
+  <h1>🚀 6 OY DAWAMINDA: Trading Plan & Level Tracker</h1>
+  <div class="subtitle">Boshlang'ich balans: $100 | Jami: 150 Savdo Kuni | Risk va Maqsadlar 100% Excel andozasida</div>
   
   <div class="chart-container">
     <canvas id="planChart"></canvas>
@@ -66,27 +66,37 @@
   const totalLevels = 150;
   let initialBalance = 100.00;
   
-  // Standart foyda foizlari (+8% yoki Excelga mos ravishda)
-  let profits = new Array(totalLevels).fill(8); 
+  // Excel bo'yicha har bir guruhning aniq strategik maqsad foizlari
+  function getExcelTargetPercent(day) {
+    if (day === 1 || day === 2) return 8.0;   // Lvl 1-2: 8%
+    if (day >= 3 && day <= 25) return 10.0;   // Lvl 3-25: 10%
+    if (day >= 26 && day <= 64) return 6.0;   // Lvl 26-64: 6%
+    if (day >= 65 && day <= 81) return 4.0;   // Lvl 65-81: 4%
+    return 2.0;                               // Lvl 82-150: 2%
+  }
+
+  // Excel bo'yicha risk foizlarining kamayish bosqichlari
+  function getExcelRiskPercent(day) {
+    if (day <= 25) return 5.0;                // Lvl 1-25: 5% Risk
+    if (day >= 26 && day <= 64) return 3.0;   // Lvl 26-64: 3% Risk
+    if (day >= 65 && day <= 81) return 2.0;   // Lvl 65-81: 2% Risk
+    return 1.0;                               // Lvl 82-150: 1% Risk
+  }
+
+  // Massivlarni standart Excel bo'yicha to'ldiramiz
+  let profits = [];
+  for (let d = 1; d <= totalLevels; d++) {
+    profits.push(getExcelTargetPercent(d));
+  }
+  
   let balances = new Array(totalLevels).fill(0);
   balances[0] = initialBalance;
-
-  // Dinamik risk foizlarini aniqlash (Exceldagi kabi qadamlar)
-  function getRiskPercent(dayIndex) {
-    let day = dayIndex + 1;
-    if (day <= 15) return 5;
-    if (day <= 34) return 4;
-    if (day <= 64) return 3;
-    if (day <= 104) return 2;
-    return 1; // 105 dan 150-kungacha 1% risk
-  }
 
   function calculateData() {
     for (let i = 0; i < totalLevels; i++) {
       let startBal = balances[i];
       let pPercent = profits[i];
       
-      // Excelingiz bo'yicha kunlik maqsad foizi % (ba'zi darajalarda o'zgaradi, masalan 1-kun 8%, keyingilarida o'sishga mos)
       let endBal = startBal + (startBal * (pPercent / 100));
       if (endBal < 0) endBal = 0;
 
@@ -103,14 +113,16 @@
     tbody.innerHTML = '';
     
     for (let i = 0; i < totalLevels; i++) {
+      let currentDay = i + 1;
       let startBal = balances[i];
       let pPercent = profits[i];
       
-      let riskPercent = getRiskPercent(i);
+      // Excel qoidalari asosida ustunlarni aniq hisoblash
+      let riskPercent = getExcelRiskPercent(currentDay);
       let riskAmount = startBal * (riskPercent / 100);
+      let targetPercent = getExcelTargetPercent(currentDay);
       
-      // Excel aniq formati: Foyda maqsadi asosan balansning 8% yoki unga yaqin o'sish foizida
-      let standardGoal = startBal * 0.08; 
+      let standardGoal = startBal * (targetPercent / 100); 
       let pips = standardGoal / 2;
       let lot = startBal / 10000; 
 
@@ -120,10 +132,11 @@
       let row = document.createElement('tr');
       let statusHTML = '';
       
-      if (pPercent >= 6) {
+      // Statusni aniqlash sharti
+      if (pPercent >= targetPercent) {
         row.className = 'profit-row';
         statusHTML = '<span class="status-badge status-success">Maqsad Bajarildi ✅</span>';
-      } else if (pPercent > 0 && pPercent < 6) {
+      } else if (pPercent > 0 && pPercent < targetPercent) {
         row.className = 'warning-row';
         statusHTML = '<span class="status-badge status-warning">Kam Foyda ⚠️</span>';
       } else if (pPercent === 0) {
@@ -134,7 +147,7 @@
       }
 
       row.innerHTML = `
-        <td><b>${i+1}</b></td>
+        <td><b>${currentDay}</b></td>
         <td>$${startBal.toFixed(2)}</td>
         <td>${riskPercent}%</td>
         <td>$${riskAmount.toFixed(2)}</td>
@@ -160,7 +173,7 @@
     data: {
       labels: Array.from({length: totalLevels}, (_, i) => `${i+1}`),
       datasets: [{
-        label: '6 Oylik O\'sish Balansi ($)',
+        label: '6 Oylik Trayektoriya ($)',
         data: [],
         borderColor: '#1e3c72',
         backgroundColor: 'rgba(30, 60, 114, 0.04)',
